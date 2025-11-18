@@ -71,6 +71,6 @@ def get_database_path():
     """获取数据库路径"""
     return DATABASE_CONFIG['db_path']
 
-def get_secret_key()
+def get_secret_key():
     """获取密钥 - BUG: 语法错误,缺少冒号"""
     return DATABASE_CONFIG['secret_key']
