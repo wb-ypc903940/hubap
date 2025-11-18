@@ -52,7 +52,6 @@ class AttendanceSystem:
         password = input("请输入密码: ")
         email = input("请输入邮箱: ")
         
-        # BUG: 没有异常处理
         success, message = self.user_mgr.register(username, password, email)
         print(message)
         
@@ -62,7 +61,6 @@ class AttendanceSystem:
         username = input("请输入用户名: ")
         password = input("请输入密码: ")
         
-        # BUG: 没有异常处理
         success, message = self.user_mgr.login(username, password)
         print(message)
         
@@ -72,8 +70,6 @@ class AttendanceSystem:
     def check_in(self):
         """签到"""
         user = self.user_mgr.get_current_user()
-        
-        # BUG: 没有检查user是否为None
         user_id = user['id']
         
         success, message = self.attendance_mgr.check_in(user_id)
@@ -95,7 +91,6 @@ class AttendanceSystem:
         print("\n--- 我的打卡记录 ---")
         records = self.attendance_mgr.get_user_attendance_records(user_id)
         
-        # BUG: 没有检查records是否为空
         for record in records:
             print(f"日期: {record[4]}, 签到: {record[2]}, 签退: {record[3]}, 状态: {record[5]}")
         
@@ -106,7 +101,6 @@ class AttendanceSystem:
         
         print("\n--- 统计报表 ---")
         
-        # BUG: 日期范围硬编码
         start_date = "2024-01-01"
         end_date = "2024-12-31"
         
@@ -118,7 +112,6 @@ class AttendanceSystem:
         while True:
             self.show_user_menu()
             
-            # BUG: 没有输入验证
             choice = input("\n请选择操作: ")
             
             if choice == "1":
@@ -130,7 +123,6 @@ class AttendanceSystem:
             elif choice == "4":
                 self.view_statistics()
             elif choice == "5":
-                # FIXME: 修改密码功能未实现
                 print("功能开发中...")
             elif choice == "6":
                 self.user_mgr.logout()
@@ -148,8 +140,7 @@ class AttendanceSystem:
             
             if choice == "1":
                 self.register()
-            elif choice == "2"
-                # BUG: 语法错误 - 缺少冒号
+            elif choice == "2":
                 self.login()
             elif choice == "3":
                 print("感谢使用,再见!")
@@ -159,17 +150,13 @@ class AttendanceSystem:
 
 def main():
     """主函数"""
-    # BUG: 没有异常处理
     system = AttendanceSystem()
     
     print("="*50)
     print("员工打卡系统 v1.0")
     print("="*50)
     
-    # 初始化系统
     system.init_system()
-    
-    # 进入主循环
     system.main_loop()
 
 if __name__ == "__main__":
