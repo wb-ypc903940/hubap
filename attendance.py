@@ -3,7 +3,7 @@
 负责签到、签退、打卡记录管理
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from database import Database
 import config
 
@@ -72,11 +72,11 @@ class AttendanceManager:
     
     def calculate_work_hours(self, check_in_time, check_out_time):
         if not check_in_time or not check_out_time:
-            return datetime.timedelta(0)
+            return timedelta(0)
         check_in = datetime.strptime(check_in_time, "%Y-%m-%d %H:%M:%S")
         check_out = datetime.strptime(check_out_time, "%Y-%m-%d %H:%M:%S")
         if check_out < check_in:
-            return datetime.timedelta(0)
+            return timedelta(0)
         return check_out - check_in
     
     def get_late_count(self, user_id, month=None):
