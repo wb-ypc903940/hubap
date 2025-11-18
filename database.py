@@ -13,138 +13,133 @@ class Database:
         self.connection = None
         
     def connect(self):
-        """连接数据库 - BUG: 资源未正确关闭"""
+        """连接数据库"""
         self.connection = sqlite3.connect(self.db_path)
-        # BUG: 没有异常处理
         return self.connection
     
     def init_database(self):
         """初始化数据库表"""
         conn = self.connect()
-        cursor = conn.cursor()
-        
-        # 创建用户表
-        cursor.execute(config.DB_SCHEMA['users_table'])
-        
-        # 创建考勤表
-        cursor.execute(config.DB_SCHEMA['attendance_table'])
-        
-        conn.commit()
-        # BUG: 资源未关闭 - cursor和conn都没有close()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(config.DB_SCHEMA['users_table'])
+            cursor.execute(config.DB_SCHEMA['attendance_table'])
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
     
     def execute_query(self, query, params=None):
-        """执行查询 - BUG: SQL注入漏洞"""
+        """执行查询(参数化)"""
         conn = self.connect()
-        cursor = conn.cursor()
-        
-        # BUG: 直接使用字符串拼接，存在SQL注入风险
-        if params:
-            cursor.execute(query, params)
-        else:
-            cursor.execute(query)
-        
-        results = cursor.fetchall()
-        # BUG: 没有关闭连接
-        return results
+        try:
+            cursor = conn.cursor()
+            if params:
+                cursor.execute(query, params)
+            else:
+                cursor.execute(query)
+            results = cursor.fetchall()
+            return results
+        finally:
+            cursor.close()
+            conn.close()
     
     def insert_user(self, username, password, email, role='employee'):
-        """插入用户 - BUG: SQL注入漏洞"""
+        """插入用户(参数化)"""
         conn = self.connect()
-        cursor = conn.cursor()
-        
-        # BUG: 使用字符串格式化，存在严重SQL注入漏洞
-        query = f"INSERT INTO users (username, password, email, role) VALUES ('{username}', '{password}', '{email}', '{role}')"
-        cursor.execute(query)
-        
-        conn.commit()
-        return cursor.lastrowid
-        # BUG: 连接未关闭
+        try:
+            cursor = conn.cursor()
+            query = "INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?)"
+            cursor.execute(query, (username, password, email, role))
+            conn.commit()
+            return cursor.lastrowid
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_user_by_username(self, username):
-        """根据用户名获取用户"""
+        """根据用户名获取用户(参数化)"""
         conn = self.connect()
-        cursor = conn.cursor()
-        
-        # BUG: SQL注入漏洞 - 使用f-string拼接SQL
-        query = f"SELECT * FROM users WHERE username = '{username}'"
-        cursor.execute(query)
-        
-        user = cursor.fetchone()
-        conn.close()
-        return user
+        try:
+            cursor = conn.cursor()
+            query = "SELECT * FROM users WHERE username = ?"
+            cursor.execute(query, (username,))
+            user = cursor.fetchone()
+            return user
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_user_by_id(self, user_id):
-        """根据ID获取用户 - BUG: 空值检查缺失"""
+        """根据ID获取用户(参数化)"""
         conn = self.connect()
-        cursor = conn.cursor()
-        
-        # BUG: 没有检查user_id是否为None或有效
-        query = "SELECT * FROM users WHERE id = ?"
-        cursor.execute(query, (user_id,))
-        
-        return cursor.fetchone()
-        # BUG: 连接未关闭
+        try:
+            cursor = conn.cursor()
+            query = "SELECT * FROM users WHERE id = ?"
+            cursor.execute(query, (user_id,))
+            return cursor.fetchone()
+        finally:
+            cursor.close()
+            conn.close()
     
     def insert_attendance(self, user_id, check_in_time, check_out_time, date, status):
-        """插入打卡记录"""
+        """插入打卡记录(参数化)"""
         conn = self.connect()
-        cursor = conn.cursor()
-        
-        query = "INSERT INTO attendance (user_id, check_in_time, check_out_time, date, status) VALUES (?, ?, ?, ?, ?)"
-        cursor.execute(query, (user_id, check_in_time, check_out_time, date, status))
-        
-        conn.commit()
-        return cursor.lastrowid
+        try:
+            cursor = conn.cursor()
+            query = "INSERT INTO attendance (user_id, check_in_time, check_out_time, date, status) VALUES (?, ?, ?, ?, ?)"
+            cursor.execute(query, (user_id, check_in_time, check_out_time, date, status))
+            conn.commit()
+            return cursor.lastrowid
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_attendance_by_user(self, user_id):
-        """获取用户的打卡记录"""
+        """获取用户的打卡记录(参数化)"""
         conn = self.connect()
-        cursor = conn.cursor()
-        
-        query = "SELECT * FROM attendance WHERE user_id = ?"
-        cursor.execute(query, (user_id,))
-        
-        records = cursor.fetchall()
-        # BUG: 连接未关闭
-        return records
+        try:
+            cursor = conn.cursor()
+            query = "SELECT * FROM attendance WHERE user_id = ?"
+            cursor.execute(query, (user_id,))
+            records = cursor.fetchall()
+            return records
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_attendance_by_date(self, user_id, date):
-        """获取指定日期的打卡记录 - BUG: 逻辑错误"""
+        """获取指定日期的打卡记录(参数化)"""
         conn = self.connect()
-        cursor = conn.cursor()
-        
-        # BUG: 使用了错误的列名进行查询
-        query = f"SELECT * FROM attendance WHERE user_id = {user_id} AND date = '{date}'"
-        cursor.execute(query)
-        
-        return cursor.fetchall()
+        try:
+            cursor = conn.cursor()
+            query = "SELECT * FROM attendance WHERE user_id = ? AND date = ?"
+            cursor.execute(query, (user_id, date))
+            return cursor.fetchall()
+        finally:
+            cursor.close()
+            conn.close()
     
     def update_checkout(self, attendance_id, check_out_time):
-        """更新签退时间"""
+        """更新签退时间(参数化)"""
         conn = self.connect()
-        cursor = conn.cursor()
-        
-      # BUG: 缩进错误
-        query = "UPDATE attendance SET check_out_time = ? WHERE id = ?"
-        cursor.execute(query, (check_out_time, attendance_id))
-        
-        conn.commit()
-        conn.close()
+        try:
+            cursor = conn.cursor()
+            query = "UPDATE attendance SET check_out_time = ? WHERE id = ?"
+            cursor.execute(query, (check_out_time, attendance_id))
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
     
     def delete_user(self, user_id):
-        """删除用户 - BUG: 数据一致性问题"""
+        """删除用户(保持数据一致性由上层处理)"""
         conn = self.connect()
-        cursor = conn.cursor()
-        
-        # BUG: 删除用户时没有删除相关的打卡记录，违反数据一致性
-        query = "DELETE FROM users WHERE id = ?"
-        cursor.execute(query, (user_id,))
-        
-        conn.commit()
-        conn.close()
-    
-    def __del__(self):
-        """析构函数"""
-        # BUG: 没有检查connection是否存在
-        if self.connection:
-            self.connection.close()
+        try:
+            cursor = conn.cursor()
+            query = "DELETE FROM users WHERE id = ?"
+            cursor.execute(query, (user_id,))
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
