@@ -151,8 +151,7 @@ class UserManager:
         
         # BUG: 邮箱验证过于简单
         if '@' not in email:
-            errors.append("邮箱格式错误"
-        # BUG: 语法错误 - 缺少右括号
+            errors.append("邮箱格式错误")
         
         return len(errors) == 0, errors
     
@@ -161,6 +160,8 @@ class UserManager:
         
         # BUG: 没有检查current_user是否为None
         # BUG: 使用了错误的比较方式
-        if self.current_user['role'] = 'admin':  # BUG: 语法错误，应该用==而不是=
+        if not self.current_user:
+            return False
+        if self.current_user['role'] == 'admin':  # 修复：使用==比较
             return True
         return False
